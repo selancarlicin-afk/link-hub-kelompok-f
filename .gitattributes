@@ -1,0 +1,5 @@
+# Paksa LF agar skrip & config tetap valid di dalam kontainer Linux
+# walaupun di-clone dari Windows.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

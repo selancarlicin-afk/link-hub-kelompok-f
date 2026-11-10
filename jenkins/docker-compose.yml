@@ -1,0 +1,40 @@
+# =====================================================================
+#  Jenkins + ngrok untuk CI/CD Resource Link Hub (Kelompok F)
+#  Jalankan dari folder jenkins/:   docker compose up -d --build
+#  Jenkins UI     : http://localhost:8080
+#  ngrok inspector: http://localhost:4040  (lihat URL publik https://xxxx.ngrok-free.app)
+# =====================================================================
+name: jenkins-ci
+
+services:
+  jenkins:
+    build: .
+    image: linkhub-jenkins:lts
+    container_name: jenkins
+    user: root                       # akses docker.sock di Docker Desktop
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock   # Docker-outside-of-Docker
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok
+    restart: unless-stopped
+    depends_on:
+      - jenkins
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    # Jika NGROK_URL diisi (domain statis gratis dari dashboard ngrok),
+    # URL publik tidak berubah-ubah sehingga webhook GitHub tidak perlu diganti.
+    command: http jenkins:8080 --log stdout ${NGROK_URL:+--url=}${NGROK_URL}
+    ports:
+      - "4040:4040"
+
+volumes:
+  jenkins_home:
+    name: jenkins_home
